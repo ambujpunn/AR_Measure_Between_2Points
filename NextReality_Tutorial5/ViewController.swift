@@ -16,6 +16,9 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     // 4.2
     var grids = [Grid]()
     
+    // 5.3
+    var numberOfTaps = 0
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -33,6 +36,10 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 
         // Set the scene to the view
         sceneView.scene = scene
+        
+        // 5.1
+        let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tapped))
+        sceneView.addGestureRecognizer(gestureRecognizer)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -103,4 +110,51 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         foundGrid.update(anchor: anchor as! ARPlaneAnchor)
     }
+    
+    // 5.2
+    @objc func tapped(gesture: UITapGestureRecognizer) {
+        // 5.4
+        numberOfTaps += 1
+        
+        // Get 2D position of touch event on screen
+        let touchPosition = gesture.location(in: sceneView)
+        
+        // Translate those 2D points to 3D points using hitTest (existing plane)
+        let hitTestResults = sceneView.hitTest(touchPosition, types: .existingPlane)
+        
+        guard let hitTest = hitTestResults.first else {
+            return
+        }
+        
+        // 5.5
+        // If first tap, add red marker. If second tap, add green marker and reset to 0
+        if numberOfTaps == 1 {
+            addRedMarker(hitTestResult: hitTest)
+        }
+        else {
+            // After 2nd tap, reset taps to 0
+            numberOfTaps = 0
+            addGreenMarker(hitTestResult: hitTest)
+        }
+    }
+    
+    // 5.6
+    func addRedMarker(hitTestResult: ARHitTestResult) {
+        addMarker(hitTestResult: hitTestResult, color: .red)
+    }
+    
+    func addGreenMarker(hitTestResult: ARHitTestResult) {
+        addMarker(hitTestResult: hitTestResult, color: .green)
+    }
+    
+    func addMarker(hitTestResult: ARHitTestResult, color: UIColor) {
+        let geometry = SCNSphere(radius: 0.01)
+        geometry.firstMaterial?.diffuse.contents = color
+        
+        let markerNode = SCNNode(geometry: geometry)
+        markerNode.position = SCNVector3(hitTestResult.worldTransform.columns.3.x, hitTestResult.worldTransform.columns.3.y, hitTestResult.worldTransform.columns.3.z)
+        
+        sceneView.scene.rootNode.addChildNode(markerNode)
+    }
+    
 }
