@@ -10,6 +10,39 @@ import UIKit
 import SceneKit
 import ARKit
 
+// 6.3
+// https://stackoverflow.com/questions/21886224/drawing-a-line-between-two-points-using-scenekit
+extension SCNGeometry {
+    class func lineFrom(vector vector1: SCNVector3, toVector vector2: SCNVector3) -> SCNGeometry {
+        let indices: [Int32] = [0, 1]
+        
+        let source = SCNGeometrySource(vertices: [vector1, vector2])
+        let element = SCNGeometryElement(indices: indices, primitiveType: .line)
+        
+        return SCNGeometry(sources: [source], elements: [element])
+    }
+}
+
+// 6.4
+extension SCNVector3 {
+    static func distanceFrom(vector vector1: SCNVector3, toVector vector2: SCNVector3) -> Float {
+        let x0 = vector1.x
+        let x1 = vector2.x
+        let y0 = vector1.y
+        let y1 = vector2.y
+        let z0 = vector1.z
+        let z1 = vector2.z
+        
+        return sqrtf(powf(x1-x0, 2) + powf(y1-y0, 2) + powf(z1-z0, 2))
+    }
+}
+
+extension Float {
+    func metersToInches() -> Float {
+        return self * 39.3701
+    }
+}
+
 class ViewController: UIViewController, ARSCNViewDelegate {
 
     @IBOutlet var sceneView: ARSCNView!
@@ -18,6 +51,10 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     // 5.3
     var numberOfTaps = 0
+    
+    // 6.1
+    var startPoint: SCNVector3!
+    var endPoint: SCNVector3!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -129,12 +166,22 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // 5.5
         // If first tap, add red marker. If second tap, add green marker and reset to 0
         if numberOfTaps == 1 {
+            // 6.2
+            startPoint = SCNVector3(hitTest.worldTransform.columns.3.x, hitTest.worldTransform.columns.3.y, hitTest.worldTransform.columns.3.z)
             addRedMarker(hitTestResult: hitTest)
         }
         else {
             // After 2nd tap, reset taps to 0
             numberOfTaps = 0
+            // 6.2
+            endPoint = SCNVector3(hitTest.worldTransform.columns.3.x, hitTest.worldTransform.columns.3.y, hitTest.worldTransform.columns.3.z)
             addGreenMarker(hitTestResult: hitTest)
+            
+            // 6.3
+            addLineBetween(start: startPoint, end: endPoint)
+            
+            // 6.5
+            addDistanceText(distance: SCNVector3.distanceFrom(vector: startPoint, toVector: endPoint), at: endPoint)
         }
     }
     
@@ -156,5 +203,25 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         sceneView.scene.rootNode.addChildNode(markerNode)
     }
+   
+    // 6.3
+    func addLineBetween(start: SCNVector3, end: SCNVector3) {
+        let lineGeometry = SCNGeometry.lineFrom(vector: start, toVector: end)
+        let lineNode = SCNNode(geometry: lineGeometry)
+        
+        sceneView.scene.rootNode.addChildNode(lineNode)
+    }
     
+    // 6.6
+    func addDistanceText(distance: Float, at point: SCNVector3) {
+        let textGeometry = SCNText(string: String(format: "%.1f\"", distance.metersToInches()), extrusionDepth: 1)
+        textGeometry.font = UIFont.systemFont(ofSize: 10)
+        textGeometry.firstMaterial?.diffuse.contents = UIColor.black
+
+        let textNode = SCNNode(geometry: textGeometry)
+        textNode.position = SCNVector3Make(point.x, point.y, point.z);
+        textNode.scale = SCNVector3Make(0.005, 0.005, 0.005)
+        
+        sceneView.scene.rootNode.addChildNode(textNode)
+    }
 }
