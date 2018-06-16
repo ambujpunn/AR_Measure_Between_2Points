@@ -13,10 +13,8 @@ import ARKit
 class ViewController: UIViewController, ARSCNViewDelegate {
 
     @IBOutlet var sceneView: ARSCNView!
-    // 4.2
     var grids = [Grid]()
     
-    // 5.3
     var numberOfTaps = 0
     
     override func viewDidLoad() {
@@ -27,17 +25,14 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Show statistics such as fps and timing information
         sceneView.showsStatistics = true
-        // 4.4
         sceneView.debugOptions = ARSCNDebugOptions.showFeaturePoints
         
         // Create a new scene
-        // 4.1
         let scene = SCNScene()
 
         // Set the scene to the view
         sceneView.scene = scene
         
-        // 5.1
         let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tapped))
         sceneView.addGestureRecognizer(gestureRecognizer)
     }
@@ -47,7 +42,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Create a session configuration
         let configuration = ARWorldTrackingConfiguration()
-        // 4.5
         configuration.planeDetection = .horizontal
 
         // Run the view's session
@@ -92,7 +86,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
     }
     
-    // 4.3
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
         let grid = Grid(anchor: anchor as! ARPlaneAnchor)
         self.grids.append(grid)
@@ -111,11 +104,8 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         foundGrid.update(anchor: anchor as! ARPlaneAnchor)
     }
     
-    // 5.2
     @objc func tapped(gesture: UITapGestureRecognizer) {
-        // 5.4
         numberOfTaps += 1
-        
         // Get 2D position of touch event on screen
         let touchPosition = gesture.location(in: sceneView)
         
@@ -126,7 +116,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
             return
         }
         
-        // 5.5
         // If first tap, add red marker. If second tap, add green marker and reset to 0
         if numberOfTaps == 1 {
             addRedMarker(hitTestResult: hitTest)
@@ -138,7 +127,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         }
     }
     
-    // 5.6
     func addRedMarker(hitTestResult: ARHitTestResult) {
         addMarker(hitTestResult: hitTestResult, color: .red)
     }
