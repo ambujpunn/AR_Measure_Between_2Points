@@ -10,7 +10,6 @@ import UIKit
 import SceneKit
 import ARKit
 
-// 6.3
 // https://stackoverflow.com/questions/21886224/drawing-a-line-between-two-points-using-scenekit
 extension SCNGeometry {
     class func lineFrom(vector vector1: SCNVector3, toVector vector2: SCNVector3) -> SCNGeometry {
@@ -23,7 +22,6 @@ extension SCNGeometry {
     }
 }
 
-// 6.4
 extension SCNVector3 {
     static func distanceFrom(vector vector1: SCNVector3, toVector vector2: SCNVector3) -> Float {
         let x0 = vector1.x
@@ -46,13 +44,10 @@ extension Float {
 class ViewController: UIViewController, ARSCNViewDelegate {
 
     @IBOutlet var sceneView: ARSCNView!
-    // 4.2
     var grids = [Grid]()
     
-    // 5.3
     var numberOfTaps = 0
     
-    // 6.1
     var startPoint: SCNVector3!
     var endPoint: SCNVector3!
     
@@ -64,17 +59,14 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Show statistics such as fps and timing information
         sceneView.showsStatistics = true
-        // 4.4
         sceneView.debugOptions = ARSCNDebugOptions.showFeaturePoints
         
         // Create a new scene
-        // 4.1
         let scene = SCNScene()
 
         // Set the scene to the view
         sceneView.scene = scene
         
-        // 5.1
         let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tapped))
         sceneView.addGestureRecognizer(gestureRecognizer)
     }
@@ -84,7 +76,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Create a session configuration
         let configuration = ARWorldTrackingConfiguration()
-        // 4.5
         configuration.planeDetection = .horizontal
 
         // Run the view's session
@@ -129,7 +120,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
     }
     
-    // 4.3
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
         let grid = Grid(anchor: anchor as! ARPlaneAnchor)
         self.grids.append(grid)
@@ -148,9 +138,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         foundGrid.update(anchor: anchor as! ARPlaneAnchor)
     }
     
-    // 5.2
     @objc func tapped(gesture: UITapGestureRecognizer) {
-        // 5.4
         numberOfTaps += 1
         
         // Get 2D position of touch event on screen
@@ -163,29 +151,23 @@ class ViewController: UIViewController, ARSCNViewDelegate {
             return
         }
         
-        // 5.5
         // If first tap, add red marker. If second tap, add green marker and reset to 0
         if numberOfTaps == 1 {
-            // 6.2
             startPoint = SCNVector3(hitTest.worldTransform.columns.3.x, hitTest.worldTransform.columns.3.y, hitTest.worldTransform.columns.3.z)
             addRedMarker(hitTestResult: hitTest)
         }
         else {
             // After 2nd tap, reset taps to 0
             numberOfTaps = 0
-            // 6.2
             endPoint = SCNVector3(hitTest.worldTransform.columns.3.x, hitTest.worldTransform.columns.3.y, hitTest.worldTransform.columns.3.z)
             addGreenMarker(hitTestResult: hitTest)
             
-            // 6.3
             addLineBetween(start: startPoint, end: endPoint)
             
-            // 6.5
             addDistanceText(distance: SCNVector3.distanceFrom(vector: startPoint, toVector: endPoint), at: endPoint)
         }
     }
     
-    // 5.6
     func addRedMarker(hitTestResult: ARHitTestResult) {
         addMarker(hitTestResult: hitTestResult, color: .red)
     }
@@ -204,7 +186,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         sceneView.scene.rootNode.addChildNode(markerNode)
     }
    
-    // 6.3
     func addLineBetween(start: SCNVector3, end: SCNVector3) {
         let lineGeometry = SCNGeometry.lineFrom(vector: start, toVector: end)
         let lineNode = SCNNode(geometry: lineGeometry)
@@ -212,7 +193,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         sceneView.scene.rootNode.addChildNode(lineNode)
     }
     
-    // 6.6
     func addDistanceText(distance: Float, at point: SCNVector3) {
         let textGeometry = SCNText(string: String(format: "%.1f\"", distance.metersToInches()), extrusionDepth: 1)
         textGeometry.font = UIFont.systemFont(ofSize: 10)
